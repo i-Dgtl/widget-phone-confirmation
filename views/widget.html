@@ -1,0 +1,57 @@
+<link rel="stylesheet" href="https://cdn.direct.i-dgtl.ru/VerifyWidget.css" />
+<script src="https://cdn.direct.i-dgtl.ru/VerifyWidget.umd.min.js"></script>
+
+<div id="widget"></div>
+
+<script>
+  messageKey = '';
+
+  const sendAuthKeyFunc = (key) => {
+    const payload = {
+      key,
+    };
+    messageKey = key;
+    return fetch('/sendAuthKeyFunc', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  };
+
+  const onSuccessFunc = async () => {
+    const payload = {
+      key: messageKey,
+    };
+    // Отправляем POST-запрос на сервер и ждем, пока ответ не запишется в переменную response
+    const response = await fetch('/checkVerification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // Преобразовывает ответ от сервера в JSON формат
+    const verificationInfo = await response.json();
+    console.log(verificationInfo);
+
+    // Проверяем, что статус проверки кода подтвержден, убираем виджет и показываем сраницу успешного подтверждения
+    if ((await verificationInfo.status) == 'CONFIRMED') {
+      window.VerifyWidget.unmount('#widget');
+      window.location = '/success';
+    }
+  };
+
+  window.VerifyWidget.mount(
+    '#widget',
+    {
+      destination: '{{ phoneNumber }}', // в переменную phoneNumber подставится номер пользователя
+      widgetId: 'F9zM85', //'b28Amc',
+      captchaSiteKey: '6LcS1pUpAAAAAI_dtC2dmRwkf63FVkPlLtPEVu7o',
+    },
+    sendAuthKeyFunc,
+    onSuccessFunc
+  );
+</script>
